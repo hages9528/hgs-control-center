@@ -1,0 +1,31 @@
+name: HGS production smoke
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/production-smoke.yml"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe production
+        shell: bash
+        run: |
+          set +e
+          BASE="https://hgs-control-center.vercel.app"
+          echo "BASE=$BASE"
+          for path in "/" "/api/health" "/api/overview" "/api/integrations" "/api/commands"; do
+            echo ""
+            echo "=== $path ==="
+            rm -f /tmp/h /tmp/b
+            code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" "$BASE$path")
+            ec=$?
+            echo "curl_exit=$ec http_status=$code"
+            echo "--- headers ---"
+            sed -n '1,30p' /tmp/h 2>/dev/null || true
+            echo "--- body ---"
+            head -c 3000 /tmp/b 2>/dev/null || true
+            echo
+          done
