@@ -19,6 +19,8 @@ export async function GET() {
     stripeConfigured,
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV || null,
     deploymentUrl: deploymentHost ? `https://${deploymentHost}` : null,
+    gitSha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+    project: process.env.VERCEL_PROJECT_ID || null,
     time: new Date().toISOString(),
   };
 
