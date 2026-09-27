@@ -5,6 +5,12 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/production-smoke.yml"
+      - "app/**"
+      - "lib/**"
+      - "middleware.js"
+      - "next.config.mjs"
+      - "package.json"
+      - "vercel.json"
 
 permissions:
   contents: write
@@ -14,6 +20,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Wait for matching Vercel deployment
+        shell: bash
+        run: |
+          set +e
+          BASE="https://hgs-control-center.vercel.app"
+          echo "Waiting for $GITHUB_SHA on $BASE"
+          matched=0
+          for i in {1..30}; do
+            body=$(curl -L -sS --connect-timeout 10 --max-time 20 "$BASE/api/health")
+            code=$?
+            sha=$(printf '%s' "$body" | python3 -c 'import json,sys
+try:
+ print(json.load(sys.stdin).get("gitSha") or "")
+except Exception:
+ print("")')
+            echo "poll=$i curl_exit=$code health_sha=$sha"
+            if [ "$sha" = "$GITHUB_SHA" ]; then matched=1; break; fi
+            sleep 10
+          done
+          echo "matched=$matched" >> "$GITHUB_ENV"
 
       - name: Probe production and save report
         shell: bash
@@ -27,6 +54,7 @@ jobs:
             echo
             echo "- tested_at_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "- commit: $GITHUB_SHA"
+            echo "- matched_current_deployment: ${matched:-0}"
             echo "- base: $BASE"
             echo
           } > "$REPORT"
@@ -43,7 +71,7 @@ jobs:
               echo "- http_status: $code"
               echo
               echo '~~~'
-              head -c 4000 /tmp/b 2>/dev/null || true
+              head -c 5000 /tmp/b 2>/dev/null || true
               echo
               echo '~~~'
               echo
@@ -53,13 +81,8 @@ jobs:
           probe_post () {
             path="$1"
             data="$2"
-            extra_header="$3"
             rm -f /tmp/h /tmp/b
-            if [ -n "$extra_header" ]; then
-              code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" -H "Content-Type: application/json" -H "$extra_header" --data "$data" "$BASE$path")
-            else
-              code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" -H "Content-Type: application/json" --data "$data" "$BASE$path")
-            fi
+            code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" -H "Content-Type: application/json" --data "$data" "$BASE$path")
             ec=$?
             {
               echo "## POST $path"
@@ -68,19 +91,12 @@ jobs:
               echo "- http_status: $code"
               echo
               echo '~~~'
-              head -c 4000 /tmp/b 2>/dev/null || true
+              head -c 5000 /tmp/b 2>/dev/null || true
               echo
               echo '~~~'
               echo
             } >> "$REPORT"
           }
-
-          # allow latest Vercel deployment/alias propagation
-          for i in {1..12}; do
-            code=$(curl -L -sS --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" "$BASE/api/health")
-            if [ "$code" != "000" ] && [ "$code" != "404" ]; then break; fi
-            sleep 10
-          done
 
           probe_get "/"
           probe_get "/api/health"
@@ -88,12 +104,12 @@ jobs:
           probe_get "/api/integrations"
           probe_get "/api/commands"
 
-          # Low-risk end-to-end command write. EXTERNAL_ACTION is intentionally not used.
-          probe_post "/api/commands" '{"name":"Production E2E smoke","action":"REFRESH_DASHBOARD","priority":"低","externalImpact":"なし","approvalRequired":false,"readbackRequired":true,"requester":"GitHub Actions production smoke","payload":{"test":true,"source":"production-smoke"}}' ""
+          # Low-risk write only. No external action.
+          probe_post "/api/commands" '{"name":"Production E2E smoke","action":"REFRESH_DASHBOARD","priority":"低","externalImpact":"なし","approvalRequired":false,"readbackRequired":true,"requester":"GitHub Actions production smoke","payload":{"test":true,"source":"production-smoke"}}'
 
-          # Security-negative tests: these should reject unauthenticated/unsigned writes.
-          probe_post "/api/metrics/ingest" '{"name":"smoke","key":"smoke","value":1,"unit":"count"}' ""
-          probe_post "/api/webhooks/stripe" '{}' ""
+          # Security-negative checks.
+          probe_post "/api/metrics/ingest" '{"name":"smoke","key":"smoke","value":1,"unit":"count"}'
+          probe_post "/api/webhooks/stripe" '{}'
 
           cat "$REPORT"
 
