@@ -6,26 +6,106 @@ on:
     paths:
       - ".github/workflows/production-smoke.yml"
 
+permissions:
+  contents: write
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe production
+      - uses: actions/checkout@v4
+
+      - name: Probe production and save report
         shell: bash
         run: |
           set +e
           BASE="https://hgs-control-center.vercel.app"
-          echo "BASE=$BASE"
-          for path in "/" "/api/health" "/api/overview" "/api/integrations" "/api/commands"; do
-            echo ""
-            echo "=== $path ==="
+          REPORT="reports/production-smoke-latest.md"
+          mkdir -p reports
+          {
+            echo "# HGS Production Smoke"
+            echo
+            echo "- tested_at_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "- commit: $GITHUB_SHA"
+            echo "- base: $BASE"
+            echo
+          } > "$REPORT"
+
+          probe_get () {
+            path="$1"
             rm -f /tmp/h /tmp/b
             code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" "$BASE$path")
             ec=$?
-            echo "curl_exit=$ec http_status=$code"
-            echo "--- headers ---"
-            sed -n '1,30p' /tmp/h 2>/dev/null || true
-            echo "--- body ---"
-            head -c 3000 /tmp/b 2>/dev/null || true
-            echo
+            {
+              echo "## GET $path"
+              echo
+              echo "- curl_exit: $ec"
+              echo "- http_status: $code"
+              echo
+              echo '~~~'
+              head -c 4000 /tmp/b 2>/dev/null || true
+              echo
+              echo '~~~'
+              echo
+            } >> "$REPORT"
+          }
+
+          probe_post () {
+            path="$1"
+            data="$2"
+            extra_header="$3"
+            rm -f /tmp/h /tmp/b
+            if [ -n "$extra_header" ]; then
+              code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" -H "Content-Type: application/json" -H "$extra_header" --data "$data" "$BASE$path")
+            else
+              code=$(curl -L -sS --connect-timeout 15 --max-time 30 -D /tmp/h -o /tmp/b -w "%{http_code}" -H "Content-Type: application/json" --data "$data" "$BASE$path")
+            fi
+            ec=$?
+            {
+              echo "## POST $path"
+              echo
+              echo "- curl_exit: $ec"
+              echo "- http_status: $code"
+              echo
+              echo '~~~'
+              head -c 4000 /tmp/b 2>/dev/null || true
+              echo
+              echo '~~~'
+              echo
+            } >> "$REPORT"
+          }
+
+          # allow latest Vercel deployment/alias propagation
+          for i in {1..12}; do
+            code=$(curl -L -sS --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" "$BASE/api/health")
+            if [ "$code" != "000" ] && [ "$code" != "404" ]; then break; fi
+            sleep 10
           done
+
+          probe_get "/"
+          probe_get "/api/health"
+          probe_get "/api/overview"
+          probe_get "/api/integrations"
+          probe_get "/api/commands"
+
+          # Low-risk end-to-end command write. EXTERNAL_ACTION is intentionally not used.
+          probe_post "/api/commands" '{"name":"Production E2E smoke","action":"REFRESH_DASHBOARD","priority":"低","externalImpact":"なし","approvalRequired":false,"readbackRequired":true,"requester":"GitHub Actions production smoke","payload":{"test":true,"source":"production-smoke"}}' ""
+
+          # Security-negative tests: these should reject unauthenticated/unsigned writes.
+          probe_post "/api/metrics/ingest" '{"name":"smoke","key":"smoke","value":1,"unit":"count"}' ""
+          probe_post "/api/webhooks/stripe" '{}' ""
+
+          cat "$REPORT"
+
+      - name: Commit smoke report
+        shell: bash
+        run: |
+          git config user.name "hgs-smoke-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add reports/production-smoke-latest.md
+          if git diff --cached --quiet; then
+            echo "No report change"
+            exit 0
+          fi
+          git commit -m "Record production smoke result [skip ci]"
+          git push
