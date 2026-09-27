@@ -31,11 +31,7 @@ jobs:
           for i in {1..30}; do
             body=$(curl -L -sS --connect-timeout 10 --max-time 20 "$BASE/api/health")
             code=$?
-            sha=$(printf '%s' "$body" | python3 -c 'import json,sys
-try:
- print(json.load(sys.stdin).get("gitSha") or "")
-except Exception:
- print("")')
+            sha=$(printf '%s' "$body" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("gitSha") or "")' 2>/dev/null)
             echo "poll=$i curl_exit=$code health_sha=$sha"
             if [ "$sha" = "$GITHUB_SHA" ]; then matched=1; break; fi
             sleep 10
