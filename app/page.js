@@ -7,10 +7,18 @@ function Stat({label, value, hint}) { return <div className="stat"><div classNam
 export default async function Home() {
   let data = null; let error = null;
   if (configured()) { try { data = await getOverview(); } catch (e) { error = e.message; } }
-  const notionUrl = process.env.NEXT_PUBLIC_NOTION_CONTROL_CENTER;
+
+  const notionUrl = process.env.NEXT_PUBLIC_NOTION_CONTROL_CENTER || 'https://app.notion.com/p/3e7ec2cce56681ada3d7f3e7d03b77b1';
+  const vercelSettingsUrl = 'https://vercel.com/aidoura1950-9543/hgs-control-center/settings/environment-variables';
+  const missing = [
+    !process.env.NOTION_API_KEY ? 'NOTION_API_KEY' : null,
+    !(process.env.DASHBOARD_USER && process.env.DASHBOARD_PASSWORD) ? 'DASHBOARD_USER / DASHBOARD_PASSWORD' : null,
+    !process.env.HGS_INGEST_SECRET ? 'HGS_INGEST_SECRET' : null,
+  ].filter(Boolean);
+
   return <main>
-    <header className="hero"><div><div className="eyebrow">HGS OPERATIONS</div><h1>Control Center</h1><p>Notionを正本に、案件・指令・メトリクス・外部連携を一画面で扱う操作盤。</p></div><div className="heroActions">{notionUrl&&<a className="button secondary" href={notionUrl}>Notion Control Center</a>}<a className="button" href="/api/health">API Health</a></div></header>
-    {!configured() && <div className="notice warning"><strong>Notion API未接続</strong><br/>NOTION_API_KEYをホスティング側のEnvironment Variableへ設定するとライブ同期が有効になります。UIとAPIは起動可能です。</div>}
+    <header className="hero"><div><div className="eyebrow">HGS OPERATIONS</div><h1>Control Center</h1><p>Notionを正本に、案件・指令・メトリクス・外部連携を一画面で扱う操作盤。</p></div><div className="heroActions"><a className="button secondary" href={notionUrl}>Notion Control Center</a><a className="button" href="/api/health">API Health</a></div></header>
+    {missing.length>0 && <div className="notice warning"><strong>本番設定未完了</strong><br/>不足: {missing.join(' / ')}。<br/><a href={vercelSettingsUrl}>Vercel Environment Variablesを開く</a> · <a href={notionUrl}>Notion Control Centerを開く</a></div>}
     {error && <div className="notice error"><strong>Notion接続エラー</strong><br/>{error}</div>}
     <section className="grid stats">
       <Stat label="連携" value={data?.summary.integrations ?? '—'} hint={`接続済み ${data?.summary.connected ?? '—'}`} />
