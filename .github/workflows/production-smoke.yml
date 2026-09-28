@@ -27,14 +27,24 @@ jobs:
           set +e
           BASE="https://hgs-control-center.vercel.app"
           matched=0
+          deployment_sha=""
           for i in {1..30}; do
             body=$(curl -L -sS --connect-timeout 10 --max-time 20 "$BASE/api/health")
             sha=$(printf '%s' "$body" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("gitSha") or "")' 2>/dev/null)
-            echo "poll=$i health_sha=$sha target=$GITHUB_SHA"
+            deployment_sha="$sha"
+            echo "poll=$i health_sha=$sha workflow_sha=$GITHUB_SHA event=$GITHUB_EVENT_NAME"
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ -n "$sha" ]; then
+              # Manual acceptance runs validate the currently assigned production
+              # deployment. The branch head may be a report-only commit that Vercel
+              # intentionally skipped via ignoreCommand.
+              matched=1
+              break
+            fi
             if [ "$sha" = "$GITHUB_SHA" ]; then matched=1; break; fi
             sleep 10
           done
           echo "matched=$matched" >> "$GITHUB_ENV"
+          echo "deployment_sha=$deployment_sha" >> "$GITHUB_ENV"
 
       - name: Probe production and save report
         shell: bash
@@ -47,7 +57,8 @@ jobs:
             echo "# HGS Production Smoke"
             echo
             echo "- tested_at_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "- commit: $GITHUB_SHA"
+            echo "- workflow_commit: $GITHUB_SHA"
+            echo "- deployment_commit: ${deployment_sha:-unknown}"
             echo "- matched_current_deployment: ${matched:-0}"
             echo "- base: $BASE"
             echo
