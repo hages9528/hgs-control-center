@@ -11,4 +11,7 @@ if(!linePage.includes('AutoRefresh seconds={300}'))errors.push('line refresh int
 const period=fs.readFileSync(path.join(root,'lib/period.js'),'utf8');for(const marker of ['parsePeriod','parseLineDate','periodUnix'])if(!period.includes(marker))errors.push(`period ${marker}`);
 for(const marker of ["date_from', period.from","created: periodUnix(period)","lineSnapshots = new Map()"] )if(!external.includes(marker))errors.push(`dated source ${marker}`);
 for(const marker of ['buildProfitOverview','広告差引利益（概算）','autoPagingToArray({ limit: 1000 })'])if(!external.includes(marker))errors.push(`profit ${marker}`);
+for(const marker of ['buildKeywordAnalysis','buildSearchTermAnalysis','keyword_info_text','search_term_view_search_term','profitStatus'])if(!external.includes(marker))errors.push(`keyword detail ${marker}`);
+const adsPage=fs.readFileSync(path.join(root,'app/ads/page.js'),'utf8');
+for(const marker of ['登録キーワード精査','未登録の有望検索語','申込みCPA','利益判定の境界'])if(!adsPage.includes(marker))errors.push(`ads ui ${marker}`);
 console.log(JSON.stringify({ok:errors.length===0,checks:required.length+19,errors},null,2));process.exit(errors.length?1:0);
