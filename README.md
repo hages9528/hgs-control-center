@@ -2,9 +2,12 @@
 
 NotionをSource of Truthとして、HGSの連携・指令・時系列メトリクス・同期状態を扱うNext.jsダッシュボードです。
 
-## 実装済み（v2）
+## 実装済み（v3）
 - Notion Public API server-side read/write
-- 6画面構成（概要 / Google広告 / 公式LINE / Stripe / 指令 / 連携設定）
+- 7画面構成（概要 / Google広告 / 公式LINE / Stripe / 統合指標 / 指令 / 連携設定）
+- JST基準の日付・期間切替（今日 / 昨日 / 7日 / 30日 / 90日 / 指定期間）
+- Google広告・Stripeの期間集計、LINEの日次集計切替、Notion統合指標の期間・ソース絞り込み
+- 取得時刻・自動更新間隔・手動更新を画面上へ明示
 - Google広告ライブ読取（Windsor.ai Connectors API）
 - Google広告の日次Notion同期（Vercel Cron、直近3日をupsert）
 - LINE Messaging API統計読取 + 署名検証Webhook
@@ -14,7 +17,7 @@ NotionをSource of Truthとして、HGSの連携・指令・時系列メトリ�
 - Stripe webhook → HGS統合メトリクスへの正規化
 - HTTP Basicによるowner-only保護
 - Health endpoint
-- Dashboard UI
+- Dashboard UI（ローディング・エラー回復・レスポンシブ表示）
 - 外部変更はCommand Queue経由。`EXTERNAL_ACTION`は承認必須が既定
 
 ## Notion正本

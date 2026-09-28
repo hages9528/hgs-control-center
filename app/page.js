@@ -1,17 +1,22 @@
 import Link from 'next/link';
 import { getOverview } from '../lib/hgs';
 import { getGoogleAdsOverview, getLineOverview, getStripeOverview } from '../lib/external';
+import { parsePeriod } from '../lib/period';
 import { ActivityBars, DonutChart, TrendChart } from './_components/Charts';
 import { AutoRefresh, Badge, EmptyState, MetricCard, PageHeader, Panel } from './_components/UI';
+import PeriodToolbar from './_components/PeriodToolbar';
 
-async function safeOverview() {
-  try { return { data: await getOverview(), error: null }; }
+async function safeOverview(period) {
+  try { return { data: await getOverview(period), error: null }; }
   catch (error) { return { data: null, error: error.message }; }
 }
 
-export default async function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home({ searchParams }) {
+  const period = parsePeriod(await searchParams);
   const [{ data, error }, ads, line, stripe] = await Promise.all([
-    safeOverview(), getGoogleAdsOverview(), getLineOverview(), getStripeOverview(),
+    safeOverview(period), getGoogleAdsOverview(period), getLineOverview({ date: period.to }), getStripeOverview(period),
   ]);
   const integrations = data?.integrations || [];
   const connected = integrations.filter((item) => item['状態'] === '接続済み').length;
@@ -30,13 +35,15 @@ export default async function Home() {
 
     <section className="metric-grid">
       <MetricCard label="接続済み" value={`${connected}/${integrations.length || 0}`} hint="外部サービス" icon="link" tone="blue" />
-      <MetricCard label="広告費（30日）" value={ads.configured ? `¥${Math.round(ads.summary.spend).toLocaleString('ja-JP')}` : '未接続'} hint={ads.configured ? `${Math.round(ads.summary.clicks).toLocaleString('ja-JP')} clicks` : 'Windsor API key'} icon="campaign" tone="violet" />
-      <MetricCard label="LINE友だち" value={line.configured ? (line.summary.followers ?? '集計待ち') : '未接続'} hint={line.configured ? '前日確定値' : 'Messaging API'} icon="chat" tone="green" />
-      <MetricCard label="Stripe決済" value={stripe.configured ? `${stripe.summary.payments}件` : '未接続'} hint={stripe.configured ? `¥${Math.round(stripe.summary.volume).toLocaleString('ja-JP')}` : 'Restricted key'} icon="card" tone="orange" />
+      <MetricCard label="広告費" value={ads.configured ? `¥${Math.round(ads.summary.spend || 0).toLocaleString('ja-JP')}` : '未接続'} hint={ads.configured ? `${Math.round(ads.summary.clicks || 0).toLocaleString('ja-JP')} clicks · 選択期間` : 'Windsor API key'} icon="campaign" tone="violet" />
+      <MetricCard label="LINE友だち" value={line.configured ? (line.summary.followers ?? '集計待ち') : '未接続'} hint={line.configured ? `${line.date} 確定値` : 'Messaging API'} icon="chat" tone="green" />
+      <MetricCard label="Stripe決済" value={stripe.configured ? `${stripe.summary.payments || 0}件` : '未接続'} hint={stripe.configured ? `¥${Math.round(stripe.summary.volume || 0).toLocaleString('ja-JP')} · 選択期間` : 'Restricted key'} icon="card" tone="orange" />
     </section>
 
+    <PeriodToolbar period={period} generatedAt={data?.generatedAt || ads.generatedAt || stripe.generatedAt} refreshSeconds={60} />
+
     <section className="dashboard-grid">
-      <Panel className="span-8" title="Google広告パフォーマンス" subtitle="直近14日の日次推移" action={<Link href="/ads">詳細を見る →</Link>}>
+      <Panel className="span-8" title="Google広告パフォーマンス" subtitle={`${period.label} · 最大14点を表示`} action={<Link href={`/ads?range=custom&from=${period.from}&to=${period.to}`}>詳細を見る →</Link>}>
         {series.length ? <TrendChart data={series} primaryKey="clicks" secondaryKey="conversions" primaryLabel="クリック" secondaryLabel="CV" /> : <EmptyState title="広告データの表示準備中" description="Google広告ページで接続状態を確認できます。" />}
       </Panel>
       <Panel className="span-4" title="接続の健全性" subtitle="読み取り経路の現在値">

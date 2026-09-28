@@ -1,25 +1,29 @@
 import { getGoogleAdsOverview } from '../../lib/external';
+import { parsePeriod } from '../../lib/period';
 import { HorizontalBars, TrendChart } from '../_components/Charts';
 import { AutoRefresh, Badge, MetricCard, PageHeader, Panel, SetupNotice } from '../_components/UI';
+import PeriodToolbar from '../_components/PeriodToolbar';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdsPage() {
-  const data = await getGoogleAdsOverview();
+export default async function AdsPage({ searchParams }) {
+  const period = parsePeriod(await searchParams);
+  const data = await getGoogleAdsOverview(period);
   const s = data.summary || {};
   return <>
     <AutoRefresh seconds={300} />
     <PageHeader eyebrow="MARKETING" title="Google広告" description="ネクストライフの配信結果を日次・キャンペーン別に確認します。表示値は読み取り専用です。" actions={<Badge tone={data.connected ? 'good' : 'warn'}>{data.connected ? '接続済み' : '設定待ち'}</Badge>} />
     {!data.configured && <SetupNotice title="Windsor.ai API接続が必要です" description="既存のGoogle広告接続をVercelから安全に読み取るため、サーバー専用のAPIキーを設定します。" variables={['WINDSOR_API_KEY', 'GOOGLE_ADS_ACCOUNT_ID']} />}
     {data.error && <div className="notice error"><strong>Google広告の取得に失敗</strong><span>{data.error}</span></div>}
+    <PeriodToolbar period={period} generatedAt={data.generatedAt} refreshSeconds={300} />
     <section className="metric-grid">
-      <MetricCard label="表示回数" value={data.connected ? Math.round(s.impressions).toLocaleString('ja-JP') : '—'} hint="直近30日" icon="activity" tone="blue" />
-      <MetricCard label="クリック" value={data.connected ? Math.round(s.clicks).toLocaleString('ja-JP') : '—'} hint={data.connected ? `CTR ${(s.ctr * 100).toFixed(2)}%` : '直近30日'} icon="campaign" tone="violet" />
-      <MetricCard label="広告費" value={data.connected ? `¥${Math.round(s.spend).toLocaleString('ja-JP')}` : '—'} hint="直近30日" icon="card" tone="orange" />
-      <MetricCard label="コンバージョン" value={data.connected ? s.conversions.toFixed(1) : '—'} hint={data.connected ? `CPA ¥${Math.round(s.cpa).toLocaleString('ja-JP')}` : '直近30日'} icon="overview" tone="green" />
+      <MetricCard label="表示回数" value={data.connected ? Math.round(s.impressions || 0).toLocaleString('ja-JP') : '—'} hint={period.label} icon="activity" tone="blue" />
+      <MetricCard label="クリック" value={data.connected ? Math.round(s.clicks || 0).toLocaleString('ja-JP') : '—'} hint={data.connected ? `CTR ${((s.ctr || 0) * 100).toFixed(2)}%` : period.label} icon="campaign" tone="violet" />
+      <MetricCard label="広告費" value={data.connected ? `¥${Math.round(s.spend || 0).toLocaleString('ja-JP')}` : '—'} hint={period.label} icon="card" tone="orange" />
+      <MetricCard label="コンバージョン" value={data.connected ? (s.conversions || 0).toFixed(1) : '—'} hint={data.connected ? `CPA ¥${Math.round(s.cpa || 0).toLocaleString('ja-JP')}` : period.label} icon="overview" tone="green" />
     </section>
     <section className="dashboard-grid">
-      <Panel className="span-8" title="クリックとコンバージョン" subtitle="30日間の日次推移">
+      <Panel className="span-8" title="クリックとコンバージョン" subtitle={`${period.label} の日次推移`}>
         <TrendChart data={data.series || []} primaryKey="clicks" secondaryKey="conversions" primaryLabel="クリック" secondaryLabel="CV" />
       </Panel>
       <Panel className="span-4" title="キャンペーン別広告費" subtitle="期間内の合計">

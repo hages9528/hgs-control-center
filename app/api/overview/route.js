@@ -1,3 +1,4 @@
 import { NextResponse } from 'next/server';
 import { getOverview } from '../../../lib/hgs';
-export async function GET(){try{return NextResponse.json(await getOverview())}catch(e){return NextResponse.json({error:e.message},{status:503})}}
+import { parsePeriod } from '../../../lib/period';
+export async function GET(request){try{const params=Object.fromEntries(request.nextUrl.searchParams);return NextResponse.json(await getOverview(parsePeriod(params)))}catch(e){return NextResponse.json({error:e.message},{status:503})}}

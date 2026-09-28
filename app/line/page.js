@@ -1,11 +1,14 @@
 import { getLineOverview } from '../../lib/external';
+import { parseLineDate } from '../../lib/period';
 import { ActivityBars, DonutChart } from '../_components/Charts';
 import { AutoRefresh, Badge, MetricCard, PageHeader, Panel, SetupNotice } from '../_components/UI';
+import PeriodToolbar from '../_components/PeriodToolbar';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
-export default async function LinePage() {
-  const data = await getLineOverview();
+export default async function LinePage({ searchParams }) {
+  const period = parseLineDate(await searchParams);
+  const data = await getLineOverview(period);
   const s = data.summary || {};
   const reachRate = s.followers ? Math.round((s.targetedReaches || 0) / s.followers * 100) : 0;
   return <>
@@ -14,8 +17,9 @@ export default async function LinePage() {
     {!data.configured && <SetupNotice title="LINE Messaging API接続が必要です" description="チャネルアクセストークンで統計を読み取り、チャネルシークレットでWebhook署名を検証します。" variables={['LINE_CHANNEL_ACCESS_TOKEN', 'LINE_CHANNEL_SECRET']} />}
     {data.error && <div className="notice error"><strong>LINEの取得に失敗</strong><span>{data.error}</span></div>}
     {data.warning && <div className="notice warning"><strong>LINEデータを保護更新中</strong><span>{data.warning}</span></div>}
+    <PeriodToolbar period={period} generatedAt={data.generatedAt} mode="day" refreshSeconds={300} />
     <section className="metric-grid">
-      <MetricCard label="友だち" value={s.followers != null ? s.followers.toLocaleString('ja-JP') : '—'} hint="前日確定値" icon="chat" tone="green" />
+      <MetricCard label="友だち" value={s.followers != null ? s.followers.toLocaleString('ja-JP') : '—'} hint={`${period.date} 確定値`} icon="chat" tone="green" />
       <MetricCard label="到達可能" value={s.targetedReaches != null ? s.targetedReaches.toLocaleString('ja-JP') : '—'} hint={`到達率 ${reachRate}%`} icon="activity" tone="blue" />
       <MetricCard label="ブロック" value={s.blocks != null ? s.blocks.toLocaleString('ja-JP') : '—'} hint="累計" icon="queue" tone="orange" />
       <MetricCard label="送信メッセージ" value={s.messages != null ? s.messages.toLocaleString('ja-JP') : '—'} hint={data.date || '前日集計'} icon="campaign" tone="violet" />
@@ -25,7 +29,7 @@ export default async function LinePage() {
         <div className="profile-card"><div className="profile-avatar">LINE</div><div><strong>{data.bot?.displayName || '未接続'}</strong><p>{data.bot?.basicId || data.bot?.premiumId || 'チャネル情報を待っています'}</p></div></div>
         <DonutChart value={reachRate} label="到達可能率" />
       </Panel>
-      <Panel className="span-7" title="前日の配信内訳" subtitle="LINE Messaging API insight · 15分キャッシュ">
+      <Panel className="span-7" title="選択日の配信内訳" subtitle={`${period.date} · LINE Messaging API insight · 15分キャッシュ`}>
         <ActivityBars values={[data.delivery?.broadcast || 0, data.delivery?.targeting || 0, data.delivery?.autoResponse || 0, data.delivery?.chat || 0]} labels={['一斉配信', '絞り込み', '自動応答', 'チャット']} />
       </Panel>
       <Panel className="span-12" title="リアルタイム受信" subtitle="Webhook → HGS統合メトリクス">

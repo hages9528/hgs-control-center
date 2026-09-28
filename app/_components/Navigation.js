@@ -7,6 +7,7 @@ const items = [
   ['/ads', 'campaign', 'Google広告'],
   ['/line', 'chat', '公式LINE'],
   ['/stripe', 'card', 'Stripe'],
+  ['/metrics', 'metrics', '統合指標'],
   ['/commands', 'queue', '指令'],
   ['/integrations', 'link', '連携設定'],
 ];
@@ -20,6 +21,7 @@ export function Icon({ name }) {
     queue: <><path d="M5 6h14M5 12h14M5 18h9" /><circle cx="3" cy="6" r="1" /><circle cx="3" cy="12" r="1" /><circle cx="3" cy="18" r="1" /></>,
     link: <><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2" /></>,
     activity: <path d="M3 12h4l2-6 4 12 2-6h6" />,
+    metrics: <><path d="M5 19V9M12 19V5M19 19v-7" /><path d="M3 19h18" /></>,
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name] || paths.activity}</svg>;
 }
