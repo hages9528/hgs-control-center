@@ -2,10 +2,14 @@
 
 NotionをSource of Truthとして、HGSの連携・指令・時系列メトリクス・同期状態を扱うNext.jsダッシュボードです。
 
-## 実装済み
+## 実装済み（v2）
 - Notion Public API server-side read/write
-- Integrations一覧
-- Command Queue GET/POST
+- 6画面構成（概要 / Google広告 / 公式LINE / Stripe / 指令 / 連携設定）
+- Google広告ライブ読取（Windsor.ai Connectors API）
+- Google広告の日次Notion同期（Vercel Cron、直近3日をupsert）
+- LINE Messaging API統計読取 + 署名検証Webhook
+- Stripe read-only表示 + 署名検証Webhook
+- Integrations一覧 / Command Queue GET/POST
 - Metrics ingest webhook（Bearer secret）
 - Stripe webhook → HGS統合メトリクスへの正規化
 - HTTP Basicによるowner-only保護
@@ -31,8 +35,13 @@ NotionをSource of Truthとして、HGSの連携・指令・時系列メトリ�
 ## Notion API側
 Notion integrationにはControl Centerと参照するOperational DBへの権限を付与してください。秘密値はNotionへ本文保存せず、ホスティングEnvironment Variablesへ保存します。
 
-## Stripe
-Stripeを自動集計する場合は `STRIPE_SECRET_KEY` と `STRIPE_WEBHOOK_SECRET` を設定し、Stripe側のWebhook destinationを `/api/webhooks/stripe` にします。最低限 `payment_intent.succeeded`, `charge.refunded`, `customer.subscription.created`, `customer.subscription.deleted` を受信できます。
+## 接続
+- Google広告: `WINDSOR_API_KEY` と `GOOGLE_ADS_ACCOUNT_ID`。APIキーはサーバー専用で、画面・ログへ出しません。
+- 公式LINE: `LINE_CHANNEL_ACCESS_TOKEN` と `LINE_CHANNEL_SECRET`。Webhook URLは `/api/webhooks/line`。
+- Stripe: 最小権限の `STRIPE_SECRET_KEY` と `STRIPE_WEBHOOK_SECRET`。Webhook URLは `/api/webhooks/stripe`。
+- 定期同期: `CRON_SECRET` を設定し、Vercel Cronから `/api/sync/google-ads` を毎時実行します。
+
+Stripe Webhookは `payment_intent.succeeded`, `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, `customer.subscription.created`, `customer.subscription.deleted` を受信できます。
 
 ## 広告・GA4・CRM・EC
 外部ツールは固有データを直接UIへ結合せず、`POST /api/metrics/ingest` へ共通スキーマで投入します。Windsor.ai等から取得したデータも同じ形式へ正規化すれば、Dashboard側は変更不要です。

@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
+export function proxy(request) {
   const path = request.nextUrl.pathname;
 
-  // Health must stay reachable for deployment/readiness probes.
   if (path === '/api/health') return NextResponse.next();
 
   const user = process.env.DASHBOARD_USER;
   const pass = process.env.DASHBOARD_PASSWORD;
   const notionConfigured = Boolean(process.env.NOTION_API_KEY);
 
-  // Fail closed before live HGS data can ever be exposed.
   if (notionConfigured && (!user || !pass)) {
     return new NextResponse('Dashboard authentication is not configured', { status: 503 });
   }
 
-  // Setup mode: no live Notion data exists yet, so the landing page can show setup status.
   if (!user || !pass) return NextResponse.next();
 
   const auth = request.headers.get('authorization');
@@ -23,11 +20,7 @@ export function middleware(request) {
     try {
       const decoded = atob(auth.slice(6));
       const idx = decoded.indexOf(':');
-      if (idx >= 0) {
-        const u = decoded.slice(0, idx);
-        const p = decoded.slice(idx + 1);
-        if (u === user && p === pass) return NextResponse.next();
-      }
+      if (idx >= 0 && decoded.slice(0, idx) === user && decoded.slice(idx + 1) === pass) return NextResponse.next();
     } catch {}
   }
 

@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- app lib middleware.js next.config.mjs package.json package-lock.json vercel.json && exit 0 || exit 1"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- app lib proxy.js next.config.mjs package.json package-lock.json pnpm-lock.yaml vercel.json && exit 0 || exit 1",
+  "crons": [
+    { "path": "/api/sync/google-ads", "schedule": "0 * * * *" }
+  ]
 }
