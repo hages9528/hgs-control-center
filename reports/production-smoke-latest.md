@@ -1,8 +1,8 @@
 # HGS Production Smoke
 
-- tested_at_utc: 2026-09-28T03:08:45Z
-- workflow_commit: ae5dd5a1354c077599eaf792dc6d080cdbf225e8
-- deployment_commit: ae5dd5a1354c077599eaf792dc6d080cdbf225e8
+- tested_at_utc: 2026-09-28T07:45:44Z
+- workflow_commit: b36a46fc0f88d415db71b03e1c15caa42cc1adf8
+- deployment_commit: b36a46fc0f88d415db71b03e1c15caa42cc1adf8
 - matched_current_deployment: 1
 - base: https://hgs-control-center.vercel.app
 
@@ -21,7 +21,7 @@ Authentication required
 - http_status: 200
 
 ~~~
-{"ok":true,"readyForOperations":true,"notionConfigured":true,"notionRead":true,"dashboardAuthConfigured":true,"ingestConfigured":true,"stripeConfigured":false,"googleAdsConfigured":true,"lineConfigured":true,"cronConfigured":true,"environment":"production","deploymentUrl":"https://hgs-control-center.vercel.app","gitSha":"ae5dd5a1354c077599eaf792dc6d080cdbf225e8","project":"prj_7XKXTcU3w4qz6mJsQoJ96tNrumNR","time":"2026-09-28T03:08:45.928Z","sampleRows":1}
+{"ok":true,"readyForOperations":true,"notionConfigured":true,"notionRead":true,"dashboardAuthConfigured":true,"ingestConfigured":true,"stripeConfigured":false,"googleAdsConfigured":true,"lineConfigured":true,"cronConfigured":true,"environment":"production","deploymentUrl":"https://hgs-control-center.vercel.app","gitSha":"b36a46fc0f88d415db71b03e1c15caa42cc1adf8","project":"prj_7XKXTcU3w4qz6mJsQoJ96tNrumNR","time":"2026-09-28T07:45:45.241Z","sampleRows":1}
 ~~~
 
 ## GET /api/overview
