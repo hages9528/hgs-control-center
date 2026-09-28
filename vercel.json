@@ -3,6 +3,6 @@
   "framework": "nextjs",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- app lib proxy.js next.config.mjs package.json package-lock.json pnpm-lock.yaml vercel.json && exit 0 || exit 1",
   "crons": [
-    { "path": "/api/sync/google-ads", "schedule": "0 * * * *" }
+    { "path": "/api/sync/google-ads", "schedule": "0 0 * * *" }
   ]
 }
