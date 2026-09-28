@@ -4,4 +4,8 @@ const required=['package.json','.env.example','lib/notion.js','lib/hgs.js','lib/
 let errors=[];for(const f of required){if(!fs.existsSync(path.join(root,f)))errors.push(`missing ${f}`)}
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');for(const k of ['NOTION_API_KEY','HGS_INGEST_SECRET','HGS_DS_COMMANDS','HGS_DS_METRICS','WINDSOR_API_KEY','LINE_CHANNEL_ACCESS_TOKEN','LINE_CHANNEL_SECRET','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','CRON_SECRET'])if(!env.includes(k+'='))errors.push(`env ${k}`);
 const hgs=fs.readFileSync(path.join(root,'lib/hgs.js'),'utf8');for(const a of ['RE_RUN_CRT','RE_RUN_TST','EXTERNAL_ACTION','SYNC_DATA'])if(!hgs.includes(a))errors.push(`action ${a}`);
-console.log(JSON.stringify({ok:errors.length===0,checks:required.length+8,errors},null,2));process.exit(errors.length?1:0);
+const external=fs.readFileSync(path.join(root,'lib/external.js'),'utf8');
+for(const marker of ["LINE_INSIGHT_CACHE_SECONDS = 900","cache: 'force-cache'","LINE_RETRY_COOLDOWN_MS = 300000","Promise.allSettled"])if(!external.includes(marker))errors.push(`line resilience ${marker}`);
+const linePage=fs.readFileSync(path.join(root,'app/line/page.js'),'utf8');
+if(!linePage.includes('AutoRefresh seconds={300}'))errors.push('line refresh interval');
+console.log(JSON.stringify({ok:errors.length===0,checks:required.length+19,errors},null,2));process.exit(errors.length?1:0);

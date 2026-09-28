@@ -4,8 +4,6 @@ import { getGoogleAdsOverview, getLineOverview, getStripeOverview } from '../lib
 import { ActivityBars, DonutChart, TrendChart } from './_components/Charts';
 import { AutoRefresh, Badge, EmptyState, MetricCard, PageHeader, Panel } from './_components/UI';
 
-export const dynamic = 'force-dynamic';
-
 async function safeOverview() {
   try { return { data: await getOverview(), error: null }; }
   catch (error) { return { data: null, error: error.message }; }
@@ -46,7 +44,7 @@ export default async function Home() {
         <div className="mini-list">
           <div><span>Notion</span><Badge tone="good">稼働</Badge></div>
           <div><span>Google Ads</span><Badge tone={ads.configured ? 'good' : 'warn'}>{ads.configured ? '稼働' : '設定待ち'}</Badge></div>
-          <div><span>LINE</span><Badge tone={line.configured ? 'good' : 'warn'}>{line.configured ? '稼働' : '設定待ち'}</Badge></div>
+          <div><span>LINE</span><Badge tone={line.connected && !line.degraded ? 'good' : 'warn'}>{line.connected ? (line.degraded ? '保護更新中' : '稼働') : '設定待ち'}</Badge></div>
           <div><span>Stripe</span><Badge tone={stripe.configured ? 'good' : 'warn'}>{stripe.configured ? '稼働' : '設定待ち'}</Badge></div>
         </div>
       </Panel>
