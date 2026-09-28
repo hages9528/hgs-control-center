@@ -45,7 +45,7 @@ export default function PeriodToolbar({ period, generatedAt, mode = 'range', ref
         <label><span>集計日</span><input type="date" max={period.maxDate} value={period.date} onChange={(event) => navigate({ date: event.target.value })} /></label>
       </> : <>
         <label><span>期間</span><select value={period.preset} onChange={(event) => navigate({ range: event.target.value, from: null, to: null })}>
-          <option value="today">今日</option><option value="yesterday">昨日</option><option value="7d">直近7日</option><option value="30d">直近30日</option><option value="90d">直近90日</option><option value="custom">指定期間</option>
+          <option value="today">今日</option><option value="yesterday">昨日</option><option value="7d">直近7日</option><option value="30d">直近30日（今日含む）</option><option value="30c">過去30日（昨日まで）</option><option value="90d">直近90日</option><option value="custom">指定期間</option>
         </select></label>
         {period.preset === 'custom' && <div className="custom-dates">
           <input aria-label="開始日" type="date" max={period.maxDate} value={from} onChange={(event) => setFrom(event.target.value)} />
@@ -54,7 +54,7 @@ export default function PeriodToolbar({ period, generatedAt, mode = 'range', ref
           <button type="button" className="apply-button" onClick={() => navigate({ range: 'custom', from, to })}>適用</button>
         </div>}
       </>}
-      <button type="button" className="icon-button" onClick={() => move(1)} disabled={(period.to || period.date) >= period.maxDate} aria-label="次の期間">→</button>
+      <button type="button" className="icon-button" onClick={() => move(1)} disabled={period.lockToLatest || (period.to || period.date) >= period.maxDate} aria-label="次の期間">→</button>
     </div>
     <div className="freshness"><span className="live-dot" /><div><strong>{refreshSeconds}秒ごとに画面更新</strong><small>最終取得 {label}</small></div><button type="button" onClick={refresh}>{refreshing ? '更新中…' : '今すぐ更新'}</button></div>
   </section>;

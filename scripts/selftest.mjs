@@ -8,7 +8,7 @@ const external=fs.readFileSync(path.join(root,'lib/external.js'),'utf8');
 for(const marker of ["LINE_INSIGHT_CACHE_SECONDS = 900","cache: 'force-cache'","LINE_RETRY_COOLDOWN_MS = 300000","Promise.allSettled"])if(!external.includes(marker))errors.push(`line resilience ${marker}`);
 const linePage=fs.readFileSync(path.join(root,'app/line/page.js'),'utf8');
 if(!linePage.includes('AutoRefresh seconds={300}'))errors.push('line refresh interval');
-const period=fs.readFileSync(path.join(root,'lib/period.js'),'utf8');for(const marker of ['parsePeriod','parseLineDate','periodUnix'])if(!period.includes(marker))errors.push(`period ${marker}`);
+const period=fs.readFileSync(path.join(root,'lib/period.js'),'utf8');for(const marker of ['parsePeriod','parseLineDate','periodUnix',"preset === '30c'"])if(!period.includes(marker))errors.push(`period ${marker}`);
 for(const marker of ["date_from', period.from","created: periodUnix(period)","lineSnapshots = new Map()"] )if(!external.includes(marker))errors.push(`dated source ${marker}`);
 for(const marker of ['buildProfitOverview','広告差引利益（概算）','autoPagingToArray({ limit: 1000 })'])if(!external.includes(marker))errors.push(`profit ${marker}`);
 for(const marker of ['buildKeywordAnalysis','buildSearchTermAnalysis','keyword_info_text','search_term_view_search_term','profitStatus'])if(!external.includes(marker))errors.push(`keyword detail ${marker}`);

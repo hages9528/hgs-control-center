@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { buildKeywordAnalysis, buildSearchTermAnalysis } from '../lib/external.js';
+import { parsePeriod, shiftDate, todayJst } from '../lib/period.js';
 
 const conversionFields = {
   conversions_申し込み_アルバイト_: 0,
@@ -57,5 +58,10 @@ const terms = buildSearchTermAnalysis([
 assert.equal(terms.candidates.length, 1);
 assert.equal(terms.candidates[0].term, '退職 代行 バイト 即日');
 assert.equal(terms.candidates[0].registered, false);
+
+const closed30 = parsePeriod({}, { defaultPreset: '30c' });
+assert.equal(closed30.days, 30);
+assert.equal(closed30.to, shiftDate(todayJst(), -1));
+assert.equal(closed30.lockToLatest, true);
 
 console.log(JSON.stringify({ ok: true, keywordGroups: keywords.keywords.length, candidates: terms.candidates.length }, null, 2));

@@ -22,7 +22,7 @@ function Breakdown({ row }) {
 }
 
 export default async function AdsPage({ searchParams }) {
-  const period = parsePeriod(await searchParams);
+  const period = parsePeriod(await searchParams, { defaultPreset: '30c' });
   const data = await getGoogleAdsOverview(period, { includeDetails: true });
   const s = data.summary || {};
   const keywordSummary = data.keywords || [];
