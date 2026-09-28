@@ -11,7 +11,7 @@ const count = (value) => Number(value || 0).toLocaleString('ja-JP', { maximumFra
 const percent = (value) => `${(Number(value || 0) * 100).toFixed(2)}%`;
 
 function StatusBadge({ status }) {
-  const good = status === 'ACTIVE';
+  const good = status === 'ACTIVE' || status === 'SERVING' || status === 'ON';
   const bad = status === 'REMOVED' || status === 'NOT_APPROVED';
   return <Badge tone={good ? 'good' : bad ? 'bad' : 'warn'}>{status || 'UNKNOWN'}</Badge>;
 }
@@ -26,13 +26,13 @@ export default async function LineYahooAdsPage({ searchParams }) {
     <PageHeader
       eyebrow="MARKETING"
       title="LINEヤフー広告"
-      description="LINE Adsの広告費・表示・クリック・コンバージョンを、キャンペーン別・日別に確認します。表示は読み取り専用です。"
+      description="Yahoo!検索広告・ディスプレイ広告の広告費・表示・クリック・コンバージョンを、キャンペーン別・日別に確認します。表示は読み取り専用です。"
       actions={<Badge tone={data.connected ? 'good' : 'warn'}>{data.connected ? '接続済み' : '接続待ち'}</Badge>}
     />
     {!data.connected && <SetupNotice
-      title="Windsor.aiでLINE Adsアカウント接続が必要です"
-      description="接続後は既存のWindsor.ai APIキーを使って自動表示します。LINEヤフー広告のAccess KeyとSecret KeyはDashboardやGitへ保存しません。"
-      variables={['LINE Ads account', 'Access Key', 'Secret Key']}
+      title="Windsor.aiでYahoo! Japan Adsアカウント接続が必要です"
+      description="Yahoo! JAPANビジネスIDのOAuth認可後、既存のWindsor.ai APIキーを使って自動表示します。認証情報はDashboard・Git・Notionへ保存しません。"
+      variables={['Yahoo! Japan Ads', 'OAuth read access']}
     />}
     {data.error && <div className="notice error"><strong>LINEヤフー広告の取得に失敗</strong><span>{data.error}</span></div>}
     <div className="notice definition-notice">
@@ -46,8 +46,8 @@ export default async function LineYahooAdsPage({ searchParams }) {
       <MetricCard label="表示回数" value={data.connected ? count(s.impressions) : '—'} hint={period.label} icon="activity" tone="blue" />
       <MetricCard label="クリック" value={data.connected ? count(s.clicks) : '—'} hint={data.connected ? `CTR ${percent(s.ctr)}` : period.label} icon="campaign" tone="violet" />
       <MetricCard label="コンバージョン" value={data.connected ? count(s.conversions) : '—'} hint={data.connected ? `CPA ${yen(s.cpa)}` : period.label} icon="overview" tone="green" />
-      <MetricCard label="リード" value={data.connected ? count(s.leads) : '—'} hint="Generate Lead" icon="chat" tone="blue" />
-      <MetricCard label="購入CV" value={data.connected ? count(s.purchases) : '—'} hint="Purchase（広告計測）" icon="profit" tone="green" />
+      <MetricCard label="平均CPC" value={data.connected ? yen(s.cpc) : '—'} hint="広告費 ÷ クリック" icon="campaign" tone="blue" />
+      <MetricCard label="全コンバージョン" value={data.connected ? count(s.allConversions) : '—'} hint="Yahoo!広告の全CV" icon="profit" tone="green" />
     </section>
 
     <section className="dashboard-grid">
@@ -66,7 +66,7 @@ export default async function LineYahooAdsPage({ searchParams }) {
             <td><strong>{row.campaign}</strong></td><td><StatusBadge status={row.status} /></td><td>{row.objective}</td>
             <td>{count(row.impressions)}</td><td>{count(row.clicks)}</td><td>{percent(row.ctr)}</td><td>{yen(row.spend)}</td><td>{count(row.conversions)}</td><td>{yen(row.cpa)}</td>
           </tr>)}
-          {!data.campaigns?.length && <tr><td colSpan="9" className="muted-cell">LINE Adsのキャンペーン実績はまだありません</td></tr>}
+          {!data.campaigns?.length && <tr><td colSpan="9" className="muted-cell">Yahoo!広告のキャンペーン実績はまだありません</td></tr>}
         </tbody></table></div>
       </Panel>
 

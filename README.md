@@ -11,7 +11,7 @@ NotionをSource of Truthとして、HGSの連携・指令・時系列メトリ�
 - Stripe成功決済とGoogle広告費による広告差引利益（概算）、日別推移、ホバー内訳（売上・件数・発生時刻・広告費）
 - 取得時刻・自動更新間隔・手動更新を画面上へ明示
 - Google広告ライブ読取（Windsor.ai Connectors API）
-- LINEヤフー広告ライブ読取（Windsor.ai `line_ads` connector、キャンペーン別・日別）
+- LINEヤフー広告ライブ読取（Windsor.ai `yahoo_japan` connector、Yahoo!検索広告・ディスプレイ広告のキャンペーン別・日別）
 - Google広告の日次Notion同期（Vercel Cron、直近3日をupsert）
 - LINE Messaging API統計読取 + 署名検証Webhook
 - Stripe read-only表示 + 署名検証Webhook
@@ -45,7 +45,7 @@ Notion integrationにはControl Centerと参照するOperational DBへの権限�
 - Google広告: `WINDSOR_API_KEY` と `GOOGLE_ADS_ACCOUNT_ID`。Windsorの統合 `/all` APIから対象Google広告アカウントだけを読み取り、APIキーは画面・ログへ出しません。
   - 「総コンバージョン」はGoogle広告の主要コンバージョン合計であり、有料契約件数ではありません。
   - キーワード別Stripe売上を直接帰属できるまでは、黒字・赤字を確定せず「利益未算定」と表示します。
-- LINEヤフー広告: Windsor.aiの `line_ads` connectorへ広告アカウントを接続します。Dashboardは既存の `WINDSOR_API_KEY` をサーバー側で使用し、必要な場合だけ `LINE_YAHOO_ADS_ACCOUNT_ID` でアカウントを限定します。Access Key / Secret KeyはDashboard、Git、Notionへ保存しません。
+- LINEヤフー広告: Windsor.aiの `yahoo_japan` connectorへYahoo! JAPANビジネスIDをOAuth接続します。Dashboardは既存の `WINDSOR_API_KEY` をサーバー側で使用し、必要な場合だけ `YAHOO_JAPAN_ADS_ACCOUNT_ID` でアカウントを限定します。OAuth認証情報はDashboard、Git、Notionへ保存しません。
 - 公式LINE: `LINE_CHANNEL_ACCESS_TOKEN` と `LINE_CHANNEL_SECRET`。Webhook URLは `/api/webhooks/line`。前日統計は15分キャッシュし、429時は前回正常値を保持して5分後に再試行します。
 - Stripe: Payment Intentsの読み取りのみを許可した `STRIPE_SECRET_KEY` と `STRIPE_WEBHOOK_SECRET`。Webhook URLは `/api/webhooks/stripe`。アカウント表示名は必要に応じて `STRIPE_ACCOUNT_LABEL`で指定します。
 - 定期保存: `CRON_SECRET` を設定し、Vercel Hobbyで利用できる日次Cronから `/api/sync/google-ads` を実行します。画面のGoogle広告値はCronではなく、表示時にWindsorから直接更新します。
