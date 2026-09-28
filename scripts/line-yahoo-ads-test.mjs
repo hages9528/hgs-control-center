@@ -6,13 +6,13 @@ const result = buildLineYahooAdsOverview([
   {
     date: '2026-09-01', account_id: 'account-1', account_name: '退職代行ネクストライフ',
     campaign: '採用', campaign_id: 'campaign-1', campaign_distribution_status: 'ACTIVE',
-    campaign_type: 'STANDARD', impressions: '1000', clicks: '30', cost: '1200',
+    campaign_type: 'STANDARD', imps: '1000', clicks: '30', cost: '1200',
     conversions: '3', all_conv: '4', conv_value: '30000',
   },
   {
     date: '2026-09-02', account_id: 'account-1', account_name: '退職代行ネクストライフ',
     campaign: '採用', campaign_id: 'campaign-1', campaign_distribution_status: 'ACTIVE',
-    campaign_type: 'STANDARD', impressions: '500', clicks: '20', cost: '800',
+    campaign_type: 'STANDARD', imps: '500', clicks: '20', cost: '800',
     conversions: '1', all_conv: '2', conv_value: '10000',
   },
 ], period);
