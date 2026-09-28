@@ -16,5 +16,5 @@ const adsPage=fs.readFileSync(path.join(root,'app/ads/page.js'),'utf8');
 for(const marker of ['登録キーワード精査','未登録の有望検索語','申込みCPA','利益判定の境界'])if(!adsPage.includes(marker))errors.push(`ads ui ${marker}`);
 for(const marker of ['getLineYahooAdsOverview','buildLineYahooAdsOverview',"'yahoo_japan'",'campaign_distribution_status'])if(!external.includes(marker))errors.push(`line yahoo ads ${marker}`);
 const lineYahooAdsPage=fs.readFileSync(path.join(root,'app/line-yahoo-ads/page.js'),'utf8');
-for(const marker of ['LINEヤフー広告','キャンペーン実績','日次実績','コンバージョンの境界'])if(!lineYahooAdsPage.includes(marker))errors.push(`line yahoo ads ui ${marker}`);
+for(const marker of ['LINEヤフー広告','キャンペーン実績','日次実績','コンバージョンの境界',"defaultPreset: '30d'","timeZone: 'Asia/Tokyo'"])if(!lineYahooAdsPage.includes(marker))errors.push(`line yahoo ads ui ${marker}`);
 console.log(JSON.stringify({ok:errors.length===0,checks:required.length+27,errors},null,2));process.exit(errors.length?1:0);

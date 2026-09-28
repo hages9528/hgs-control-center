@@ -17,7 +17,7 @@ function StatusBadge({ status }) {
 }
 
 export default async function LineYahooAdsPage({ searchParams }) {
-  const period = parsePeriod(await searchParams, { defaultPreset: '30c' });
+  const period = parsePeriod(await searchParams, { defaultPreset: '30d' });
   const data = await getLineYahooAdsOverview(period);
   const s = data.summary || {};
 
@@ -70,7 +70,7 @@ export default async function LineYahooAdsPage({ searchParams }) {
         </tbody></table></div>
       </Panel>
 
-      <Panel className="span-12" title="日次実績" subtitle={`最終取得 ${data.generatedAt ? new Date(data.generatedAt).toLocaleString('ja-JP') : '—'}`}>
+      <Panel className="span-12" title="日次実績" subtitle={`最終取得 ${data.generatedAt ? new Date(data.generatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) : '—'}`}>
         <div className="table-wrap"><table><thead><tr>
           <th>日付</th><th>表示</th><th>クリック</th><th>CTR</th><th>広告費</th><th>CV</th><th>CPA</th>
         </tr></thead><tbody>
