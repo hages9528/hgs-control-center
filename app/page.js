@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { getOverview } from '../lib/hgs';
-import { getGoogleAdsOverview, getLineOverview, getStripeOverview } from '../lib/external';
+import { buildProfitOverview, getGoogleAdsOverview, getLineOverview, getStripeOverview } from '../lib/external';
 import { parsePeriod } from '../lib/period';
 import { ActivityBars, DonutChart, TrendChart } from './_components/Charts';
 import { AutoRefresh, Badge, EmptyState, MetricCard, PageHeader, Panel } from './_components/UI';
 import PeriodToolbar from './_components/PeriodToolbar';
+import ProfitChart from './_components/ProfitChart';
 
 async function safeOverview(period) {
   try { return { data: await getOverview(period), error: null }; }
@@ -22,6 +23,7 @@ export default async function Home({ searchParams }) {
   const connected = integrations.filter((item) => item['状態'] === '接続済み').length;
   const series = ads.series?.slice(-14) || [];
   const totalActivity = (line.summary?.followers || 0) + (stripe.summary?.payments || 0);
+  const profit = buildProfitOverview(ads, stripe, period);
 
   return <>
     <AutoRefresh seconds={60} />
@@ -41,6 +43,13 @@ export default async function Home({ searchParams }) {
     </section>
 
     <PeriodToolbar period={period} generatedAt={data?.generatedAt || ads.generatedAt || stripe.generatedAt} refreshSeconds={60} />
+
+    <section className="dashboard-grid profit-overview">
+      <Panel className="span-12" title="広告差引利益（概算）" subtitle={`${period.label} · Stripe成功決済 − Google広告費`} action={<Link href={`/profit?range=custom&from=${period.from}&to=${period.to}`}>詳しく見る →</Link>}>
+        <div className="profit-summary"><strong>{profit.calculationReady ? `¥${Math.round(profit.summary.contribution).toLocaleString('ja-JP')}` : '算定不能'}</strong><span>売上 ¥{Math.round(profit.summary.revenue).toLocaleString('ja-JP')} · 成功決済 {profit.summary.requests}件 · 広告費 ¥{Math.round(profit.summary.adSpend).toLocaleString('ja-JP')}</span></div>
+        <ProfitChart data={profit.series} compact />
+      </Panel>
+    </section>
 
     <section className="dashboard-grid">
       <Panel className="span-8" title="Google広告パフォーマンス" subtitle={`${period.label} · 最大14点を表示`} action={<Link href={`/ads?range=custom&from=${period.from}&to=${period.to}`}>詳細を見る →</Link>}>
