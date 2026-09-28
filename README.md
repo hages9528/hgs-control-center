@@ -38,7 +38,7 @@ Notion integrationにはControl Centerと参照するOperational DBへの権限�
 ## 接続
 - Google広告: `WINDSOR_API_KEY` と `GOOGLE_ADS_ACCOUNT_ID`。APIキーはサーバー専用で、画面・ログへ出しません。
 - 公式LINE: `LINE_CHANNEL_ACCESS_TOKEN` と `LINE_CHANNEL_SECRET`。Webhook URLは `/api/webhooks/line`。
-- Stripe: 最小権限の `STRIPE_SECRET_KEY` と `STRIPE_WEBHOOK_SECRET`。Webhook URLは `/api/webhooks/stripe`。
+- Stripe: Payment Intentsの読み取りのみを許可した `STRIPE_SECRET_KEY` と `STRIPE_WEBHOOK_SECRET`。Webhook URLは `/api/webhooks/stripe`。アカウント表示名は必要に応じて `STRIPE_ACCOUNT_LABEL`で指定します。
 - 定期保存: `CRON_SECRET` を設定し、Vercel Hobbyで利用できる日次Cronから `/api/sync/google-ads` を実行します。画面のGoogle広告値はCronではなく、表示時にWindsorから直接更新します。
 
 Stripe Webhookは `payment_intent.succeeded`, `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, `customer.subscription.created`, `customer.subscription.deleted` を受信できます。
