@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 const items = [
   ['/', 'overview', '概要'],
   ['/ads', 'campaign', 'Google広告'],
+  ['/line-yahoo-ads', 'campaign', 'LINEヤフー広告'],
   ['/line', 'chat', '公式LINE'],
   ['/stripe', 'card', 'Stripe'],
   ['/profit', 'profit', '利益推移'],

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getOverview } from '../lib/hgs';
-import { buildProfitOverview, getGoogleAdsOverview, getLineOverview, getStripeOverview } from '../lib/external';
+import { buildProfitOverview, getGoogleAdsOverview, getLineOverview, getLineYahooAdsOverview, getStripeOverview } from '../lib/external';
 import { parsePeriod } from '../lib/period';
 import { ActivityBars, DonutChart, TrendChart } from './_components/Charts';
 import { AutoRefresh, Badge, EmptyState, MetricCard, PageHeader, Panel } from './_components/UI';
@@ -16,8 +16,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }) {
   const period = parsePeriod(await searchParams);
-  const [{ data, error }, ads, line, stripe] = await Promise.all([
-    safeOverview(period), getGoogleAdsOverview(period), getLineOverview({ date: period.to }), getStripeOverview(period),
+  const [{ data, error }, ads, lineYahooAds, line, stripe] = await Promise.all([
+    safeOverview(period), getGoogleAdsOverview(period), getLineYahooAdsOverview(period), getLineOverview({ date: period.to }), getStripeOverview(period),
   ]);
   const integrations = data?.integrations || [];
   const connected = integrations.filter((item) => item['状態'] === '接続済み').length;
@@ -35,9 +35,10 @@ export default async function Home({ searchParams }) {
     />
     {error && <div className="notice error"><strong>Notion接続エラー</strong><span>{error}</span></div>}
 
-    <section className="metric-grid">
+    <section className="metric-grid overview-grid">
       <MetricCard label="接続済み" value={`${connected}/${integrations.length || 0}`} hint="外部サービス" icon="link" tone="blue" />
       <MetricCard label="広告費" value={ads.configured ? `¥${Math.round(ads.summary.spend || 0).toLocaleString('ja-JP')}` : '未接続'} hint={ads.configured ? `${Math.round(ads.summary.clicks || 0).toLocaleString('ja-JP')} clicks · 選択期間` : 'Windsor API key'} icon="campaign" tone="violet" />
+      <MetricCard label="LINEヤフー広告費" value={lineYahooAds.connected ? `¥${Math.round(lineYahooAds.summary.spend || 0).toLocaleString('ja-JP')}` : '接続待ち'} hint={lineYahooAds.connected ? `${Math.round(lineYahooAds.summary.clicks || 0).toLocaleString('ja-JP')} clicks · 選択期間` : 'LINE Ads connector'} icon="campaign" tone="blue" />
       <MetricCard label="LINE友だち" value={line.configured ? (line.summary.followers ?? '集計待ち') : '未接続'} hint={line.configured ? `${line.date} 確定値` : 'Messaging API'} icon="chat" tone="green" />
       <MetricCard label="Stripe決済" value={stripe.configured ? `${stripe.summary.payments || 0}件` : '未接続'} hint={stripe.configured ? `¥${Math.round(stripe.summary.volume || 0).toLocaleString('ja-JP')} · 選択期間` : 'Restricted key'} icon="card" tone="orange" />
     </section>
@@ -60,6 +61,7 @@ export default async function Home({ searchParams }) {
         <div className="mini-list">
           <div><span>Notion</span><Badge tone="good">稼働</Badge></div>
           <div><span>Google Ads</span><Badge tone={ads.configured ? 'good' : 'warn'}>{ads.configured ? '稼働' : '設定待ち'}</Badge></div>
+          <div><span>LINE Yahoo Ads</span><Badge tone={lineYahooAds.connected ? 'good' : 'warn'}>{lineYahooAds.connected ? '稼働' : '接続待ち'}</Badge></div>
           <div><span>LINE</span><Badge tone={line.connected && !line.degraded ? 'good' : 'warn'}>{line.connected ? (line.degraded ? '保護更新中' : '稼働') : '設定待ち'}</Badge></div>
           <div><span>Stripe</span><Badge tone={stripe.configured ? 'good' : 'warn'}>{stripe.configured ? '稼働' : '設定待ち'}</Badge></div>
         </div>

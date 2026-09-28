@@ -8,6 +8,7 @@ export async function GET() {
   const ingestConfigured = Boolean(process.env.HGS_INGEST_SECRET);
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET);
   const googleAdsConfigured = Boolean(process.env.WINDSOR_API_KEY && process.env.GOOGLE_ADS_ACCOUNT_ID);
+  const lineYahooAdsConfigured = Boolean(process.env.WINDSOR_API_KEY);
   const lineConfigured = Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN && process.env.LINE_CHANNEL_SECRET);
   const cronConfigured = Boolean(process.env.CRON_SECRET);
   const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || null;
@@ -21,6 +22,7 @@ export async function GET() {
     ingestConfigured,
     stripeConfigured,
     googleAdsConfigured,
+    lineYahooAdsConfigured,
     lineConfigured,
     cronConfigured,
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV || null,
